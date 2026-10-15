@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Find research papers using titles, DOIs, DOI suffixes, or partial citation details.">
+<meta name="theme-color" content="#fafaf8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#11191b" media="(prefers-color-scheme: dark)">
+<title>Paper Finder · Academic Literature Search</title>
+<style>
+/* Paper Finder — Academic Minimal interface */
+:root {
+  color-scheme: light;
+  --bg: #fafaf8;
+  --surface: #ffffff;
+  --ink: #233332;
+  --muted: #677775;
+  --quiet: #8b9693;
+  --line: #dde4e1;
+  --teal: #167568;
+  --teal-deep: #0e6157;
+  --soft: #edf7f3;
+  --warn: #a24c2d;
+  --shadow: 0 12px 32px rgba(37, 62, 57, 0.035);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, textarea, select { font: inherit; }
+button, summary { cursor: pointer; }
+a { color: var(--teal-deep); }
+a:hover { color: var(--teal); }
+button:disabled { opacity: .65; cursor: wait; }
+:focus-visible { outline: 3px solid #60b6aa; outline-offset: 3px; }
+[hidden] { display: none !important; }
+.sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* Navigation */
+header { background: rgba(255,255,255,.86); border-bottom: 1px solid #e9eeeb; }
+.bar { max-width: 1020px; padding: 17px 32px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-size: 17px; font-weight: 750; letter-spacing: -.55px; white-space: nowrap; }
+.logo { display: inline-grid; place-items: center; width: 33px; height: 33px; background: var(--teal); border-radius: 9px; color: #fff; }
+.logo svg { width: 19px; height: 19px; }
+.toplabel { font-size: 11px; color: var(--quiet); letter-spacing: 1.3px; text-transform: uppercase; }
+
+/* Main, headline and search */
+main { width: min(100%, 828px); padding: 0 26px; margin: 0 auto; }
+.hero { text-align: center; padding: 76px 0 32px; }
+h1 { margin: 0; font-size: clamp(32px, 5.5vw, 44px); font-weight: 750; line-height: 1.2; letter-spacing: -1.8px; }
+
+.intro { margin: 15px auto 0; color: var(--muted); font-size: 14px; line-height: 1.8; }
+.panel { padding: 28px 28px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); transition: border-color .2s ease, box-shadow .2s ease; }
+.panel:focus-within { border-color: #91bdb4; box-shadow: 0 12px 32px rgba(37,62,57,.05), 0 0 0 3px rgba(22,117,104,.04); }
+.labelrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 0 13px; }
+label { font-size: 14px; font-weight: 700; }
+textarea { display: block; width: 100%; min-height: 138px; padding: 16px 17px; border: 1px solid #d7e0dc; background: #fdfefd; color: var(--ink); border-radius: 10px; line-height: 1.8; font-size: 15px; resize: vertical; transition: border-color .15s, box-shadow .15s; }
+textarea::placeholder { color: #a3adaa; }
+textarea:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px #16756815; }
+.fieldguide { margin: 13px 0 0; color: var(--muted); font-size: 12px; line-height: 1.8; }
+.fieldguide > strong { display: block; margin-bottom: 3px; font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.fieldguide p { margin: 0; }
+.fieldguide p strong { color: var(--ink); font-weight: 700; }
+.actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-top: 1px solid #edf0ee; margin-top: 19px; padding-top: 18px; }
+.leftactions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+button { border: 1px solid var(--line); border-radius: 8px; background: white; color: var(--ink); padding: 8px 12px; font-size: 13px; font-weight: 600; }
+button:hover { background: #f6f9f7; }
+.primary { display: inline-flex; align-items: center; gap: 9px; justify-content: center; background: var(--teal); border-color: var(--teal); color: #fff; font-size: 14px; padding: 10px 19px; min-height: 42px; box-shadow: 0 3px 6px #0e615714; }
+.primary:hover { background: var(--teal-deep); border-color: var(--teal-deep); }
+.primary svg { width: 16px; height: 16px; }
+.subtle { border: none; background: transparent; color: var(--muted); padding: 9px 10px; font-size: 13px; }
+.subtle:hover { background: #f1f6f3; color: var(--ink); }
+
+/* Recognized search fields */
+.parsed { margin-top: 15px; padding: 12px 14px; background: #f4f8fa; border: 1px solid #e1eaf0; border-radius: 9px; color: #516a77; font-size: 12px; overflow-wrap: anywhere; }
+.parsed > strong { display: block; font-size: 12px; }
+.parsedchips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+.parsedchips > span { display: inline-block; padding: 4px 8px; background: white; border: 1px solid #dbe5e9; border-radius: 5px; }
+.parsedchips b { color: #42606b; }
+
+/* Help, hidden by default to keep the search workspace clean */
+.helpbox { margin: 14px auto 0; max-width: 730px; }
+.helpbox > summary { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 9px; color: var(--muted); font-size: 13px; font-weight: 600; list-style: none; }
+.helpbox > summary::-webkit-details-marker { display: none; }
+.helpbox > summary::before { content: "ⓘ"; display: inline-block; color: var(--teal); font-size: 14px; font-weight: 700; }
+.helpbox > summary::after { content: "⌄"; display: inline-block; margin-left: 1px; font-size: 17px; line-height: .6; transition: transform .15s; }
+.helpbox[open] > summary::after { transform: rotate(180deg); }
+.guide-content { padding: 20px 23px 22px; margin: 7px 0 0; background: #fff; border: 1px solid var(--line); border-radius: 12px; font-size: 13px; line-height: 1.85; }
+.guide-content h2 { font-size: 14px; margin: 0 0 7px; }
+.guide-content p { color: var(--muted); margin: 7px 0 10px; }
+.guide-content strong { color: var(--ink); }
+.guide-content code { font: 12px/1.6 "Consolas", monospace; padding: 2px 4px; background: #f4f7f5; color: var(--teal-deep); border-radius: 4px; overflow-wrap: anywhere; }
+.ruleguide { margin: 17px 0 0; padding-top: 12px; border-top: 1px solid var(--line); }
+.ruleguide > summary { font-size: 13px; font-weight: 700; color: var(--teal-deep); }
+.ruleguide dl { margin: 12px 0 0; }
+.ruleguide dt { font-size: 13px; color: var(--ink); font-weight: 700; margin: 11px 0 1px; }
+.ruleguide dd { color: var(--muted); font-size: 12px; margin: 0 0 9px; }
+.help { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+
+/* Status, results and evidence */
+.status { margin: 33px 0 18px; font-size: 13px; line-height: 1.8; color: var(--muted); overflow-wrap: anywhere; }
+.status:empty { display: none; }
+.status.warn { color: var(--warn); }
+.loading::before { content: ""; display: inline-block; width: 13px; height: 13px; border-radius: 50%; border: 2px solid #d0e7e0; border-top-color: var(--teal); margin-right: 9px; vertical-align: -2px; animation: spin .75s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.results { display: grid; gap: 12px; }
+.results:not(:empty)::before { content: "SEARCH RESULTS"; display: block; color: var(--teal); font-size: 11px; font-weight: 750; letter-spacing: 2px; margin: 6px 0 2px; }
+.result { padding: 24px 26px 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); transition: border-color .15s ease, box-shadow .15s ease; }
+.result:hover { border-color: #c4d7d0; box-shadow: 0 7px 20px #173e3210; }
+.result.first { border-left: 3px solid var(--teal); padding-left: 24px; }
+.resulttop { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin: 0 0 11px; }
+.ordinal { color: #8b9c98; font: 12px/1.5 "Consolas", monospace; }
+.badge { display: inline-block; color: var(--teal-deep); background: var(--soft); border: 1px solid #dceee5; padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 700; }
+.badge.neutral { background: #f3f5f4; color: #677775; border-color: #edf0ee; font-weight: 600; }
+.badge.warn { background: #fff3e9; color: #9e512b; border-color: #f8e8d7; }
+.quiet { font-size: 11px; color: var(--quiet); }
+h3 { font-size: 18px; line-height: 1.5; font-weight: 700; letter-spacing: -.25px; overflow-wrap: anywhere; margin: 0 0 8px; }
+h3 a { color: var(--ink); text-decoration: none; }
+h3 a:hover { color: var(--teal-deep); text-decoration: underline; text-underline-offset: 3px; }
+.authors { font-size: 12px; color: var(--muted); line-height: 1.75; margin: 0 0 5px; }
+.citation { font-size: 13px; font-weight: 550; margin: 0 0 5px; }
+.doi { font: 12px/1.7 "Consolas", "Menlo", monospace; color: var(--muted); overflow-wrap: anywhere; }
+.evidence { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+.evidence span { padding: 3px 8px; border-radius: 5px; font-size: 11px; background: #edf6f0; color: #32715b; }
+.evidence .mismatch { background: #fff2e9; color: #9e552e; }
+.evidence .missing { background: #f0f2f2; color: #6f7b7a; }
+.evidence .partial { background: #edf2fb; color: #426184; }
+.resultactions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 17px; }
+.openlink { display: inline-flex; align-items: center; background: var(--teal); color: white; border-radius: 7px; text-decoration: none; padding: 7px 12px; font-size: 12px; font-weight: 700; min-height: 35px; }
+.openlink:hover { background: var(--teal-deep); color: white; }
+.resultactions button { padding: 7px 11px; font-size: 12px; min-height: 35px; }
+.fallback { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 15px; margin: 18px 0 0; padding: 13px 0; font-size: 12px; }
+.fallback a { font-size: 12px; text-decoration: none; }
+.fallback a:hover { text-decoration: underline; }
+.empty { text-align: center; padding: 32px 0 12px; color: var(--muted); }
+.empty strong { display: block; font-size: 13px; font-weight: 600; color: var(--muted); }
+.empty p { margin: 4px 0 0; font-size: 12px; color: var(--quiet); }
+
+/* Small-print footer and feedback */
+.footer { margin: 65px 0 28px; padding: 17px 0 0; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 15px; align-items: flex-start; color: var(--quiet); font-size: 11px; }
+.footer a { color: var(--muted); }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #233b36; color: #fff; border-radius: 8px; box-shadow: 0 12px 32px #172e2630; padding: 10px 17px; font-size: 13px; z-index: 10; max-width: 90vw; text-align: center; }
+
+@media (max-width: 650px) {
+  .bar { padding: 14px 18px; }
+  .toplabel { display: none; }
+  main { padding: 0 17px; }
+  .hero { padding: 52px 0 27px; }
+  .panel { padding: 21px 18px 17px; }
+  textarea { min-height: 130px; font-size: 14px; }
+  .result { padding: 20px 18px; }
+  .result.first { padding-left: 16px; }
+  h3 { font-size: 17px; }
+  .footer { flex-direction: column; gap: 5px; margin-top: 48px; }
+}
+@media (max-width: 380px) {
+   .intro { font-size: 13px; }
+  .primary { padding: 10px 14px; }
+  .fieldguide { line-height: 1.75; }
+}
+
+/* Match the operating system / browser appearance automatically.
+   Light mode remains the original Academic Minimal design. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #11191b;
+    --surface: #1b2729;
+    --ink: #eef5f2;
+    --muted: #b6c7c3;
+    --quiet: #a0b2ae;
+    --line: #35464a;
+    --teal: #54c2b1;
+    --teal-deep: #83d9ca;
+    --soft: #213c38;
+    --warn: #ffb296;
+    --shadow: 0 12px 32px rgba(0, 0, 0, .17);
+  }
+  header { background: rgba(24, 35, 38, .94); border-bottom-color: #304045; }
+  .logo, .primary, .openlink { background: #17766b; color: #fff; border-color: #17766b; }
+  .primary:hover, .openlink:hover { background: #116258; border-color: #116258; color: #fff; }
+  .panel:focus-within {
+    border-color: #509e92;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .22), 0 0 0 3px rgba(84, 194, 177, .11);
+  }
+  textarea { background: #142023; border-color: #475b5e; color: var(--ink); }
+  textarea::placeholder { color: #a3b4b0; }
+  textarea:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(84, 194, 177, .18); }
+  .actions { border-top-color: var(--line); }
+  button { background: #273639; border-color: var(--line); color: var(--ink); }
+  button:hover { background: #314246; }
+  .primary { box-shadow: 0 3px 9px rgba(0,0,0,.21); }
+  .subtle { background: transparent; color: var(--muted); }
+  .subtle:hover { background: #2b3d3e; color: var(--ink); }
+  .parsed { background: #1c3038; border-color: #39515b; color: #c4dee5; }
+  .parsedchips > span { background: #273d43; border-color: #49626a; }
+  .parsedchips b { color: #e0eff1; }
+  .guide-content { background: var(--surface); }
+  .guide-content code { background: #2a3b3c; color: var(--teal-deep); }
+  .loading::before { border-color: #335d57; border-top-color: var(--teal); }
+  .result:hover { border-color: #55766d; box-shadow: 0 7px 20px rgba(0, 0, 0, .21); }
+  .ordinal { color: #adbfba; }
+  .badge { border-color: #325a4f; }
+  .badge.neutral { background: #2a393a; color: #c8d5d2; border-color: #435458; }
+  .badge.warn { background: #4a3024; color: #ffc4a7; border-color: #704735; }
+  h3 a:hover { color: var(--teal-deep); }
+  .evidence span { background: #1d4034; color: #b0f0cc; }
+  .evidence .mismatch { background: #4a3024; color: #ffc5a8; }
+  .evidence .missing { background: #2d393c; color: #c5d3d0; }
+  .evidence .partial { background: #283a53; color: #b7d6ff; }
+  .toast { background: #36534e; color: #fff; box-shadow: 0 12px 30px rgba(0,0,0,.35); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.7" cy="10.7" r="6.3"></circle><path d="m15.5 15.5 5 5"></path></svg></span><span>Paper Finder</span></div>
+    <span class="toplabel">Literature Search</span>
+  </div>
+</header>
+<main>
+  <section class="hero" aria-label="Paper search introduction">
+    <h1>Find paper</h1>
+    <p class="intro">Search by article title, DOI, or partial citation details.</p>
+  </section>
+
+  <section class="panel" aria-label="Paper search">
+    <form id="form">
+      <div class="labelrow">
+        <label for="query">Which paper are you looking for?</label>
+      </div>
+      <textarea id="query" rows="4" maxlength="8000" placeholder="Enter an article title, DOI, DOI suffix, or any citation details you have." spellcheck="false"></textarea>
+      <div class="fieldguide" aria-label="Search input guide">
+        <strong>Enter whatever details you have.</strong>
+        <p>A complete article title, DOI, or DOI suffix can be used on its own. For a search based on partial information, enter <strong>at least two of the following: author name, article title, journal name (or abbreviation), publication year, volume, issue, or page number</strong>. Separate the details with spaces, commas, or line breaks.</p>
+      </div>
+      <div id="parsed" class="parsed" aria-live="polite" hidden></div>
+      <div class="actions">
+        <div class="leftactions">
+          <button class="primary" id="search" type="submit"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5"></path></svg>Find paper</button>
+          <button type="button" class="subtle" id="cancel" hidden>Cancel</button>
+        </div>
+        <button class="subtle" id="clear" type="button">Clear</button>
+      </div>
+    </form>
+  </section>
+
+  <details class="helpbox">
+    <summary>Search tips and citation guidelines</summary>
+    <div class="guide-content">
+      <h2>No specific citation format is required</h2>
+      <p>You can search using only a <strong>complete article title, DOI, or DOI suffix</strong>. For example, <code>d6gc01635a</code> is recognized as an RSC DOI suffix.</p>
+      <p>For partial citations, enter <strong>at least two of the following: author name, article title, journal name or abbreviation, publication year, volume, issue, or page number</strong>. Separate the details with spaces, commas, or line breaks.</p>
+      <p>Common journal abbreviations, including JACS and JOC, are recognized. The search can compare volume and issue numbers, first pages, page ranges, and article numbers. Review the identified fields to make sure they were interpreted correctly. If necessary, add a label such as <code>year: 2024</code>.</p>
+      <p>The search compares up to 200 candidate records and displays up to 25 results. If one paper can be identified unambiguously from the supplied details, only that result is displayed. You can also paste references in ACS, APA, or Vancouver style, as well as BibTeX or RIS entries.</p>
+      <details class="ruleguide"><summary>How citation details are recognized</summary><dl>
+<dt>Paper title</dt><dd>Full and partial titles are compared with indexed article titles. Quotation marks or a <code>title:</code> label help preserve chemical locants and numbers during parsing.</dd>
+<dt>DOI and DOI suffix</dt><dd>Full DOIs and DOI URLs are looked up directly. Recognized suffix patterns, including those used by RSC and ACS, are used to reconstruct candidate DOIs, which are then checked against registered metadata. DOI fragments of at least six characters are checked against DOI strings; a partial match is not considered definitive.</dd>
+<dt>Journal names and abbreviations</dt><dd>A chemistry-focused lookup table recognizes journal names and common abbreviations, including JACS and JOC. Variations in capitalization, periods, and spacing are accepted. If a journal is not recognized, use a <code>journal:</code> label.</dd>
+<dt>Year, volume, and issue</dt><dd>The parser recognizes labels such as <code>year:</code>, <code>vol:</code>, and <code>issue:</code>, as well as volume(issue) notation and common citation formats. An unlabeled four-digit number may be interpreted as a publication year, depending on context.</dd>
+<dt>Page ranges and article numbers</dt><dd>The parser recognizes first-page numbers, full or abbreviated page ranges, and article numbers beginning with e. It checks page ranges before identifying standalone publication years to reduce ambiguity.</dd>
+<dt>Ambiguous input</dt><dd>Inferred fields are labeled, and unclassified numbers are checked against the bibliographic details of each candidate. If multiple papers have similar citation details, additional information may be needed.</dd>
+</dl></details>
+      <p class="help">Search queries are sent to Crossref. This page does not save your search history. Full-text access depends on the publisher and your institution’s subscriptions.</p>
+    </div>
+  </details>
+
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+  <section id="results" class="results" aria-label="Search results"></section>
+  <div id="fallback" class="fallback" hidden></div>
+  <div id="empty" class="empty">
+    <strong>Start with what you know.</strong>
+    <p>No specific reference format is required.</p>
+  </div>
+  <footer class="footer">
+    <span>© 2026 wooresearchgroup · Last updated: October 13, 2026</span>
+    <span>Data: <a href="https://www.crossref.org/documentation/retrieve-metadata/rest-api/" target="_blank" rel="noopener noreferrer">Crossref</a> · DOI links: <a href="https://doi.org/" target="_blank" rel="noopener noreferrer">DOI.org</a></span>
+  </footer>
+</main>
+<div id="toast" class="toast" role="status" hidden></div>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const aliases=[["JACS", "J. Am. Chem. Soc.", "Journal of the American Chemical Society"], ["JOC", "J. Org. Chem.", "Journal of Organic Chemistry", "The Journal of Organic Chemistry"], ["OL", "Org. Lett.", "Organic Letters"], ["Angew", "ACIE", "Angew. Chem.", "Angew. Chem. Int. Ed.", "Angewandte Chemie International Edition"], ["Angewandte Chemie"], ["Chem. Sci.", "ChemSci", "Chemical Science"], ["Chem. Commun.", "ChemComm", "Chemical Communications"], ["ACS Catal.", "ACS Catalysis"], ["Nat. Chem.", "Nature Chemistry"], ["Nat. Catal.", "Nature Catalysis"], ["Nat. Commun.", "Nature Communications"], ["Green Chem.", "Green Chemistry"], ["Chem. Rev.", "Chemical Reviews"], ["Chem. Soc. Rev.", "Chemical Society Reviews"], ["Adv. Synth. Catal.", "Advanced Synthesis & Catalysis"], ["EJOC", "Eur. J. Org. Chem.", "European Journal of Organic Chemistry"], ["AJOC", "Asian J. Org. Chem.", "Asian Journal of Organic Chemistry"], ["Org. Biomol. Chem.", "OBC", "Organic & Biomolecular Chemistry"], ["Chem. Eur. J.", "Chemistry - A European Journal"], ["ChemCatChem"], ["ChemSusChem"], ["Synlett"], ["Synthesis"], ["Tetrahedron"], ["Tet. Lett.", "Tetrahedron Lett.", "Tetrahedron Letters"], ["ACS Sustain. Chem. Eng.", "ACS Sustainable Chemistry & Engineering"], ["ACS Cent. Sci.", "ACS Central Science"], ["ACS Omega"], ["J. Med. Chem.", "Journal of Medicinal Chemistry"], ["RSC Med. Chem.", "RSC Medicinal Chemistry"], ["RSC Adv.", "RSC Advances"], ["ChemPhotoChem"], ["J. Photochem. Photobiol. A", "Journal of Photochemistry and Photobiology A: Chemistry"], ["Org. Process Res. Dev.", "OPRD", "Organic Process Research & Development"], ["J. Phys. Chem. A", "The Journal of Physical Chemistry A"], ["J. Phys. Chem. B", "The Journal of Physical Chemistry B"], ["J. Phys. Chem. C", "The Journal of Physical Chemistry C"], ["J. Phys. Chem. Lett.", "The Journal of Physical Chemistry Letters"], ["Inorg. Chem.", "Inorganic Chemistry"], ["Organometallics"], ["Adv. Mater.", "Advanced Materials"], ["Science"], ["Nature"], ["Cell"], ["PNAS", "Proc. Natl. Acad. Sci. U. S. A.", "Proceedings of the National Academy of Sciences"], ["Sci. Adv.", "Science Advances"], ["Nat. Synth.", "Nature Synthesis"], ["Sens. Actuators B Chem.", "Sensors and Actuators B: Chemical"]];
+const norm=s=>String(s||'').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu,'');
+const clean=s=>String(s||'').replace(/<[^>]*>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/\s+/g,' ').trim();
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+
+
+
+// Ordered rules: identifiers → explicit labels/protected titles → journal aliases
+// → conventional citation patterns → numeric clues → author/title text.
+const journalKey=s=>norm(s).replace(/^the/,'');
+const journalISSN={"journaloftheamericanchemicalsociety": "0002-7863", "journaloforganicchemistry": "0022-3263", "organicletters": "1523-7060", "greenchemistry": "1463-9262", "science": "0036-8075", "nature": "0028-0836", "angewandtechemieinternationaledition": "1521-3773"};
+function expandJournal(s){const key=journalKey(s);return aliases.find(a=>a.some(v=>journalKey(v)===key))?.at(-1)||s;}
+function journalRegex(name){return name.replace(/\./g,'').split(/[\s-]+/).map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('[\\s.\\-]*')+'\\.?';}
+// Journal names that are also ordinary words (or very short acronyms) need stricter matching:
+// they must be written as in the alias (case-sensitive), and common words must be followed by
+// a citation number, end the input, or be set off by a comma/semicolon/line break.
+const commonWordJournals=new Set(['science','nature','cell','synthesis','tetrahedron']);
+const caseSensitiveJournals=new Set(['OL','OBC']);
+function findJournal(text){
+ const choices=aliases.flatMap(a=>a.map(name=>({name,title:a.at(-1)}))).sort((a,b)=>b.name.replace(/\W/g,'').length-a.name.replace(/\W/g,'').length);
+ for(const j of choices){
+  const common=commonWordJournals.has(j.name.toLowerCase()),strictCase=common||caseSensitiveJournals.has(j.name);
+  const after=common?'(?=[\\s,.;:]*\\d|[\\s.]*$|\\s*[,;\\n])':'(?=$|[^\\p{L}\\p{N}])';
+  const re=new RegExp('(^|[^\\p{L}\\p{N}])('+journalRegex(j.name)+')'+after,strictCase?'u':'iu');
+  const m=re.exec(text);if(m)return {title:j.title,start:m.index+m[1].length,end:m.index+m[1].length+m[2].length,text:m[2]};
+ }return null;
+}
+function expandText(s){const j=findJournal(s);return j?s.slice(0,j.start)+j.title+s.slice(j.end):s;}
+function normalizedPage(value){
+ let s=String(value||'').normalize('NFKC').replace(/[−–—]/g,'-').replace(/--+/g,'-').replace(/\s+/g,'').toLowerCase();
+ const m=s.match(/^([a-z]*)(\d+)-([a-z]*)(\d+)$/);
+ if(m){let [,prefix,start,endPrefix,end]=m;if(end.length<start.length){let n=Number(start.slice(0,start.length-end.length)+end);if(n<Number(start))n+=10**end.length;end=String(n);}return prefix+start+'-'+(endPrefix||prefix)+end;}
+ return s;
+}
+function pageMatch(a,b){a=normalizedPage(a);b=normalizedPage(b);return a===b||(!a.includes('-')&&a===b.split('-')[0]);}
+function suffixInfo(raw){
+ let s=raw.normalize('NFKC').trim().replace(/^doi(?:\s*(?:일부|뒷부분|suffix|fragment))?\s*[:：=]?\s*/i,'').replace(/^[\s(["'“]+|[\s)\]"'”.,;]+$/g,'');
+ if(extractDOIs(s).length||/\s/.test(s)||safeURL(s))return null;
+ const candidates=[];
+ if(/^[bcd]\d[a-z]{2}\d{5}[a-z]$/i.test(s))candidates.push('10.1039/'+s);
+ else if(/^(?:acs\.)?[a-z][a-z0-9]*\.\d[a-z]\d{4,}$/i.test(s)||/^(?:ja|jo|ol)\d{6}[a-z\d]$/i.test(s))candidates.push('10.1021/'+s);
+ else if(/^(?:anie|ange|adma|chem|cssc|ejoc|ajoc|cctc|adsc)\.\d{8,12}$/i.test(s))candidates.push('10.1002/'+s);
+ else if(/^s(?:41586|41557|41929|41467|41563|41565|41598)-\d{3}-\d{4,6}-[\da-z]$/i.test(s)||/^n(?:ature|chem|comms)\d+$/i.test(s))candidates.push('10.1038/'+s);
+ else if(/^(?:science|sciadv|scitranslmed)\.[a-z\d.]+$/i.test(s))candidates.push('10.1126/'+s);
+ else if(/^j\.[a-z]+\.\d{4}\.\d{2}\.\d{3,}$/i.test(s))candidates.push('10.1016/'+s);
+ const explicit=/^doi\b/i.test(raw.trim());
+ const fragment=/^[a-z\d][a-z\d._;()/:+-]{5,}$/i.test(s)&&/[a-z]/i.test(s)&&/\d/.test(s)&&!/^[es]?\d+(?:-\d+)?$/i.test(s)&&(/[./]/.test(s)||(s.match(/\d/g)||[]).length>=4);
+ if(candidates.length||explicit&&s.length>=6||fragment)return {suffix:s,candidates,kind:candidates.length?'suffix':'fragment'};
+ return null;
+}
+// A single person's name: 1–5 capitalized words, initials or Hangul names, no subject words.
+const personNameLike=s=>{if(/\b(?:catalysis|photoredox|synthesis|addition|reaction|oxidation|reduction|chemistry|radical|coupling|merging|visible|light|catalyzed|catalytic|via|using|of|the|for)\b/i.test(s))return false;const ws=s.replace(/et\s+al\.?/gi,'').replace(/\s+and\s+/gi,' ').split(/[\s,;]+/).filter(Boolean);
+ // Capitalized words, initials, uncased scripts (Hangul, CJK, Arabic, Devanagari…), name particles (de, van, d'…).
+ const particle=/^(?:de|del|della|der|den|van|von|da|di|du|dos|das|le|la|bin|ibn|al|el)$/i;
+ const token=/^(?:[\p{Lu}][\p{L}\p{M}'’-]*\.?|[A-Z](?:\.[A-Z])*\.?|\p{Lo}[\p{Lo}\p{M}'’-]*|[dD]['’][\p{Lu}][\p{L}'’-]*)$/u;
+ return ws.length>0&&ws.length<=12&&ws.every(v=>token.test(v)||particle.test(v))&&ws.some(v=>!particle.test(v));};
+const blankFields=()=>({journal:'',year:'',volume:'',issue:'',page:'',title:'',author:''});
+function parseFreeInput(raw){
+ const f=blankFields(),p={raw:raw.trim(),q:'',f,title:'',looseNumbers:[],suffix:null,rules:{},notes:[],conflicts:[],unparsed:''};
+ const set=(k,v,why,explicit=false)=>{v=String(v||'').trim().replace(/^[,;\s]+|[,;\s]+$/g,'');if(!v)return;
+  if(k==='page')v=normalizedPage(v);if(k==='journal')v=expandJournal(v);
+  if(f[k]&&norm(f[k])!==norm(v)){if(explicit)p.conflicts.push(fieldNames[k]+' has conflicting values: '+f[k]+' / '+v);return;}
+  f[k]=v;p.rules[k]=why;
+ };
+ const finish=()=>{f.journal=expandJournal(f.journal);p.title=f.title;p.q=[f.title,f.author,f.journal,f.year,f.volume,f.issue,f.page,...p.looseNumbers,p.unparsed].filter(Boolean).join(' ');return p;};
+ if(/^(?:https?:\/\/(?:dx\.)?doi\.org\/)?10\.\d{4,9}\/?$/i.test(raw.trim())){p.conflicts.push('A DOI prefix alone cannot identify a paper. Add the identifier after the slash.');return p;}
+ if(extractDOIs(raw).length||safeURL(raw)){p.q=raw.trim();return p;}
+ if(/^\s*@\w+\s*\{|^TY\s+-/m.test(raw)){const b=parseStructuredReference(raw);p.f=b.f;p.title=b.title;p.q=b.q;for(const [k,v]of Object.entries(b.f))if(v)p.rules[k]='Bibliographic file tag';return p;}
+ const suffix=suffixInfo(raw);if(suffix){p.suffix=suffix;p.q=suffix.suffix;return p;}
+ let t=raw.normalize('NFKC').replace(/[−–—]/g,'-').replace(/\u00ad/g,'').replace(/^\s*\[\d+\]\s*/,'').trim();
+ // Preserve chemical locants and years inside a quoted title.
+ t=t.replace(/["“]([^"”]+)["”]/g,(_,v)=>{set('title',v,'Quoted title',true);return ' ';});
+ const labelRE=/(?:^|[\s,;|])((?:논문\s*제목|논문명|제목|title)|(?:저널명|저널|학술지|journal)|(?:authors?|저자)|(?:발행\s*년도|발행\s*연도|년도|연도|year)|(?:volume|vol\.?|권)|(?:issue|no\.?|호)|(?:pages?|pp?\.?|페이지|쪽)|(?:article\s*(?:number|no\.?)|논문번호))\s*[:：=]\s*/gi;
+ const labeled=[...t.matchAll(labelRE)];
+ if(labeled.length){const rest=[t.slice(0,labeled[0].index)];labeled.forEach((m,i)=>{
+  const key=/article|논문번호/i.test(m[1])?'page':/제목|논문명|title/i.test(m[1])?'title':/저널|학술지|journal/i.test(m[1])?'journal':/author|저자/i.test(m[1])?'author':/년도|연도|year/i.test(m[1])?'year':/volume|vol|권/i.test(m[1])?'volume':/issue|^no|호/i.test(m[1])?'issue':'page';
+  let value=t.slice(m.index+m[0].length,i+1<labeled.length?labeled[i+1].index:t.length).replace(/[\s,;|]+$/,'');
+  if(['year','volume','issue','page'].includes(key)){const n=value.match(/^([a-z]?\d+(?:\s*-\s*[a-z]?\d+)?)/i);if(n){set(key,n[1],'Explicit field label',true);rest.push(value.slice(n[0].length));}else p.conflicts.push(fieldNames[key]+': please check the value.');}
+  else if(key==='journal'){
+   // "journal: Angew 2024" — keep only the journal; leave other details for later parsing.
+   const jj=findJournal(value);
+   if(jj){set('journal',jj.title,'Explicit field label',true);rest.push(value.slice(0,jj.start)+' '+value.slice(jj.end));}
+   else{const tail=value.match(/^(.*?\D)([\s,;]+[\d\s,;:().\-]+)$/);if(tail){set('journal',tail[1],'Explicit field label',true);rest.push(tail[2]);}else set('journal',value,'Explicit field label',true);}
+  }
+  else if(key==='author'){const tail=value.match(/^(.*?\D)([\s,;]+[\d\s,;:().\-]+)$/);if(tail){set('author',tail[1],'Explicit field label',true);rest.push(tail[2]);}else set('author',value,'Explicit field label',true);}
+  else set(key,value,'Explicit field label',true);
+ });t=rest.join(' ');}
+ const cap=(re,key,why)=>{t=t.replace(re,(_,v)=>{set(key,v,why,true);return ' ';});};
+ cap(/\b(\d{4})\s*년(?:도)?/g,'year','Year suffix');
+ cap(/\b([a-z]?\d+)\s*권/gi,'volume','Volume suffix');cap(/\b([a-z]?\d+)\s*호/gi,'issue','Issue suffix');
+ cap(/\b([a-z]?\d+(?:\s*-\s*[a-z]?\d+)?)\s*(?:페이지|쪽)/gi,'page','Page suffix');
+ cap(/\b(?:vol(?:ume)?\.\s*|vol(?:ume)?\s+)([a-z]?\d+)/gi,'volume','Volume notation');cap(/\b(?:issue\s*|no\.\s*|no\s+)([a-z]?\d+)/gi,'issue','Issue notation');
+ // "p." / "pp." / "page" only — bare "p53", "p38" or "pH7" stay in the title.
+ cap(/\b(?:pages?\s*|pp?\.\s*|pp\s+)([es]?\d+(?:\s*-\s*[es]?\d+)?)/gi,'page','Page notation');
+ // A prose title without a reference-shaped tail keeps chemical numbers intact.
+ const j=findJournal(t),wordCount=words(t).filter(x=>/[a-z가-힣]/i.test(x)).length;
+ const numericTail=/(?:\b(?:18|19|20)\d{2}\s*[,;]\s*\d+|\d+\s*\(\d+\)\s*[:,])/i.test(t);
+ // "…title… MacMillan 2016", "…title… 2016 MacMillan", "MacMillan 2016 …title…" or "…title… 2016":
+ // an author/year tag next to the title, not part of it.
+ const nameRE='([\\p{Lu}][\\p{L}\'’-]+(?:\\s+et\\s+al\\.?)?)',yearRE='((?:18|19|20)\\d{2})';
+ const notName=/^(?:the|a|an|in|on|of|for|and|with|from|to|via|by|at|recent|review|toward|towards|chemistry)$/i;
+ let metaName='';
+ const textOnly=t.replace(/\S*\d\S*/g,' ').replace(/[,;()]/g,' ').replace(/\s+/g,' ').trim();
+ const wholeName=!!textOnly&&personNameLike(textOnly);
+ if(!wholeName)for(const [re,ni] of [[new RegExp('(?:^|\\s)'+nameRE+'[\\s,]+'+yearRE+'[\\s.,;]*$','u'),1],[new RegExp('(?:^|\\s)'+yearRE+'[\\s,]+'+nameRE+'[\\s.,;]*$','u'),2],[new RegExp('^\\s*'+nameRE+'[\\s,]+'+yearRE+'\\b','u'),1]]){
+  const m=t.match(re);if(m&&!notName.test(m[ni].split(/\s+/)[0])&&!findJournal(m[ni])){metaName=m[ni];break;}
+ }
+ const yearTag=!!metaName||/(?:^|\s)(?:18|19|20)\d{2}[\s.,;]*$/.test(t);
+ if(!Object.values(f).some(Boolean)&&wordCount>=5&&!numericTail&&!yearTag&&!wholeName&&(!j||!/^\s*[,;:(]*\s*\d/.test(t.slice(j.end)))){set('title',t,'Title phrase');return finish();}
+ if(j){set('journal',j.title,'Journal name or abbreviation');p.journalOffset=j.start;t=t.slice(0,j.start)+' '+t.slice(j.end);}
+ const pageToken='([a-z]?\\d+(?:\\s*-\\s*[a-z]?\\d+)?)';
+ const patterns=[
+  {re:new RegExp('\\b((?:18|19|20)\\d{2})\\s*[,;]\\s*(\\d+)\\s*(?:\\(([^)]+)\\))?\\s*[,;:]\\s*'+pageToken+'(?=[\\s.;]*$)','i'),keys:['year','volume','issue','page'],why:'Year, volume(issue), page'},
+  {re:new RegExp('\\b(\\d+)\\s*\\(((?:18|19|20)\\d{2})\\)\\s*[,;:]?\\s*'+pageToken+'(?=[\\s.;]*$)','i'),keys:['volume','year','page'],why:'Volume (year), page'},
+  {re:new RegExp('\\b(\\d+)\\s*(?:\\(([^)]+)\\))?\\s*[:,]\\s*'+pageToken+'\\s*\\(((?:18|19|20)\\d{2})\\)(?=[\\s.;]*$)','i'),keys:['volume','issue','page','year'],why:'Volume(issue):page (year)'}
+ ];
+ if(f.journal||wordCount<=4||f.author){for(const pat of patterns){const m=pat.re.exec(t);if(m){pat.keys.forEach((k,i)=>{if(m[i+1])set(k,m[i+1],pat.why);});t=t.slice(0,m.index)+' '+t.slice(m.index+m[0].length);break;}}}
+ // volume(issue) and page ranges are consumed before four-digit year guessing.
+ t=t.replace(/\b(\d+)\s*\((\d+(?:-\d+)?)\)\s*(?:[:,]\s*([a-z]?\d+(?:\s*-\s*[a-z]?\d+)?))?/gi,(_,v,i,page)=>{set('volume',v,'Volume(issue) notation');set('issue',i,'Volume(issue) notation');if(page)set('page',page,'Volume(issue):page notation');return ' ';});
+ const ambiguous=[];
+ t=t.replace(/\b([es]?\d+\s*-\s*[es]?\d+)\b/gi,(_,v)=>{const [a,b]=v.replace(/\s/g,'').split('-').map(x=>Number(x.replace(/^[es]/i,'')));
+  // "1-4" / "5-6" can be a combined issue as well as a page range — compare it against both.
+  if(b<=12&&a<b)ambiguous.push(v.replace(/\s/g,''));else set('page',v,'Page range',true);return ' ';});
+ // Remaining journal + volume,page without a year: do not interpret page 2020 as a year.
+ if(f.journal&&!f.volume&&!f.page)t=t.replace(/^\s*(\d{1,3})\s*[,;:]\s*([a-z]?\d+)\s*[.;]?\s*$/i,(_,v,page)=>{set('volume',v,'Journal volume and first page');set('page',page,'Journal volume and first page');return ' ';});
+ if(!f.year){const years=[...t.matchAll(/\b((?:18|19|20)\d{2})\b/g)].filter(m=>Number(m[1])<=new Date().getFullYear()+1);if(years.length===1){const m=years[0];set('year',m[1],'Standalone four-digit year (inferred)');t=t.slice(0,m.index)+' '+t.slice(m.index+m[0].length);}else if(years.length>1)p.notes.push('Multiple four-digit numbers were detected; the publication year could not be determined.');}
+ cap(/\b([es]\d{3,})\b/gi,'page','Prefixed page or article number');
+ const alnumRE=/(?<![\p{L}\p{N}_-])(?=[\p{L}_-]*\d)(?=[\d_-]*\p{L})[\p{L}\d_]+(?:-[\p{L}\d_]+)?(?![\p{L}\p{N}_-])/gu;
+ const alnum=[...t.matchAll(alnumRE)].map(m=>m[0]).filter(x=>x.length<=14);
+ const restText=t.replace(alnumRE,' ').replace(/\b\d+\b/g,' ').replace(/[,;()]/g,' ').replace(/\s+/g,' ').trim();
+ // Only when other citation details are present: a lone "2H-azirine" stays a title.
+ if(alnum.length&&(!restText||personNameLike(restText))&&(Object.values(f).some(Boolean)||/\b\d+\b/.test(t.replace(alnumRE,' '))||restText)){ambiguous.push(...alnum);t=t.replace(alnumRE,' ');}
+ const nums=[...ambiguous,...[...t.matchAll(/\b(?:\d+|e\d{4,})\b/gi)].map(m=>m[0])];
+ if(nums.length===1&&!f.volume&&f.page&&f.journal){set('volume',nums[0],'Remaining number after journal and page (inferred volume)');nums.length=0;}
+ else if(nums.length===1&&f.volume&&!f.page){set('page',nums[0],'Number after volume (inferred page)');nums.length=0;}
+ p.looseNumbers=nums.slice(0,12);
+ t=t.replace(/\b(?:\d+|e\d{4,})\b/gi,' ').replace(/[()[\]{}|]/g,' ').replace(/^[\s,;:.]+|[\s,;:]+$/g,'').replace(/\s+/g,' ').trim();
+ if(/^[.\s]*$/.test(t))t='';
+ if(metaName&&!f.author){const nr=new RegExp('(^|[^\\p{L}])'+metaName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?=$|[^\\p{L}])','u');if(nr.test(t)){set('author',metaName.replace(/\s+et\s+al\.?/i,''),'Name next to publication year (inferred)');t=t.replace(nr,'$1 ').replace(/\s+/g,' ').trim();}}
+ if(!f.author&&t&&!/[;,]/.test(t)&&personNameLike(t)&&words(t).length<=6){set('author',t.replace(/\s+et\s+al\.?/gi,''),'Name-like text (inferred author)');t='';}
+ const extractedAuthors=[];
+ while(t){const m=t.match(/^([\p{L}][\p{L}'’-]*,?\s+(?:[A-Z]\.\s*){1,5})(?:[;,]\s*|(?=[A-Z])|$)/u)||t.match(/^((?:[A-Z]\.\s*){1,5}[\p{Lu}][\p{L}'’-]*)(?:[;,]\s*|$)/u);if(!m)break;extractedAuthors.push(m[1].trim());t=t.slice(m[0].length).replace(/^[\s,;&]+/,'');}
+ if(extractedAuthors.length)set('author',extractedAuthors.join('; '),'Surname and initials');
+ const nameLike=personNameLike;
+ if(t){if(!f.author&&((words(t).length===1&&!f.title)||nameLike(t)&&(Object.values(f).some(Boolean)||nums.length))){set('author',t.replace(/\s+et\s+al\.?/gi,''),'Name-like text (inferred author)');}
+ else if(!f.title)set('title',t,'Remaining title text');else p.unparsed=t;}
+ if(p.looseNumbers.length)p.notes.push('Unclassified numbers will be checked against volume, issue, and first page.');
+ if(f.year&&!/^\d{4}$/.test(f.year))p.conflicts.push('Enter the publication year as four digits.');
+ return finish();
+}
+
+function extractDOIs(text){let t=text.normalize('NFKC').replace(/\u00ad/g,'');try{t=decodeURIComponent(t);}catch{}t=t.replace(/(10\.\d{4,9}\/)\s+/g,'$1');const found=t.match(/10\.\d{4,9}\/[^\s"{}]+/gi)||[];return [...new Map(found.map(d=>{d=d.replace(/[?#].*$/,'').replace(/[.,;:'”’]+$/g,'');for(const [open,close]of [['(',')'],['[',']'],['<','>']]){while(d.endsWith(close)&&d.split(close).length>d.split(open).length)d=d.slice(0,-1);}return[d.toLowerCase(),d];})).values()];}
+function doiURL(d){return 'https://doi.org/'+encodeURIComponent(d).replace(/%2F/gi,'/');}
+function safeURL(s){try{const u=new URL(s);return /^https?:$/.test(u.protocol)?u.href:'';}catch{return '';}}
+function bibValue(t,key){const m=t.match(new RegExp('(?:^|[,\\n])\\s*'+key+'\\s*=\\s*(?:\\{([^]*?)\\}\\s*(?=,|\\n|$)|"([^"]*)"|([^,\\n}]+))','i'));return m?clean(m[1]||m[2]||m[3]):'';}
+function parseStructuredReference(raw,manual={}){
+ let q=raw.trim(),f={journal:'',year:'',volume:'',issue:'',page:''},title='';
+ if(/^\s*@\w+\s*\{/m.test(q)){title=bibValue(q,'title');f={journal:bibValue(q,'journal'),year:bibValue(q,'year'),volume:bibValue(q,'volume'),issue:bibValue(q,'number'),page:bibValue(q,'pages').replace(/--/g,'–')};q=[title,bibValue(q,'author'),...Object.values(f)].filter(Boolean).join(' ');}
+ else if(/^TY\s+-\s+/m.test(q)){const val=k=>(raw.match(new RegExp('^(?:'+k+')\\s+-\\s+(.+)$','m'))||[])[1]||'';title=val('TI|T1');f={journal:val('JO|JF|T2'),year:val('PY|Y1').slice(0,4),volume:val('VL'),issue:val('IS'),page:[val('SP'),val('EP')].filter(Boolean).join('–')};q=[title,...Object.values(f)].filter(Boolean).join(' ');}
+ else {q=q.replace(/^\s*(?:\[\d+\]|\d+[.)])\s*/,'');
+ const m=q.match(/(?:^|\s)(\d{4})\s*[,;.]\s*(\d+)\s*(?:\(([^)]+)\))?\s*[,;:]\s*([a-z]?\d+(?:\s*[-–—]\s*\d+)?)/i);
+ if(m){f.year=m[1];f.volume=m[2];f.issue=m[3]||'';f.page=m[4];const before=q.slice(0,m.index).replace(/[.,;\s]+$/,'');if(before&&!/[;:]/.test(before)&&before.split(/\s+/).length<=9)f.journal=before;}
+ }
+ f.title=title;f.author=/^\s*@\w+\s*\{/m.test(raw)?bibValue(raw,'author').replace(/\s+and\s+/gi,'; '):/^TY\s+-/m.test(raw)?[...raw.matchAll(/^AU\s+-\s+(.+)$/gm)].map(m=>m[1]).join('; '):'';
+ for(const k of Object.keys(f))if(manual[k]?.trim())f[k]=manual[k].trim();
+ f.journal=expandJournal(f.journal);q=expandText(q);return {q,f,title:f.title,raw:raw.trim()};
+}
+function yearOf(w){return w['published-print']?.['date-parts']?.[0]?.[0]||w.published?.['date-parts']?.[0]?.[0]||w.issued?.['date-parts']?.[0]?.[0]||'';}
+function yearsOf(w){return ['published-print','published-online','published','issued'].map(k=>w[k]?.['date-parts']?.[0]?.[0]).filter(Boolean).map(String);}
+function journalOf(w){return clean(w['container-title']?.[0]||'');}
+
+
+const issueNorm=v=>norm(String(v||'').replace(/^\s*(?:no|nr|issue)\.?\s*/i,''));
+const fieldNames={journal:'Journal',year:'Year',volume:'Volume',issue:'Issue',page:'Page / article no.',author:'Author',title:'Title'};
+function words(s){return clean(s).normalize('NFKC').toLowerCase().match(/[\p{L}\p{N}]+/gu)||[];}
+function titleNorm(s){return words(s).join(' ');}
+function authorMatch(input,w){return input.split(/;|\s+and\s+/i).filter(s=>s.trim()).every(person=>{const wanted=words(person);return (w.author||[]).some(a=>{const tokens=words([a.name,a.given,a.family].filter(Boolean).join(' '));return wanted.length&&wanted.every(t=>tokens.some(v=>t.length===1?v.startsWith(t):v===t));});});}
+function evidence(w,f){return Object.entries(f).filter(([,v])=>v).map(([key,value])=>{const actual=key==='journal'?journalOf(w):key==='year'?yearsOf(w).join('/'):key==='title'?clean(w.title?.[0]):key==='author'?authorText(w):key==='page'?(w.page||w['article-number']||''):w[key]||'';let state='missing';
+ if(actual){let match=false;if(key==='journal')match=journalKey(expandJournal(actual))===journalKey(expandJournal(value));else if(key==='year')match=yearsOf(w).includes(String(value));else if(key==='page')match=pageMatch(value,actual);else if(key==='author')match=authorMatch(value,w);else if(key==='title'){if(titleNorm(value)===titleNorm(actual))match=true;else if(words(value).length&&words(value).every(t=>words(actual).includes(t)))state='partial';}else if(key==='issue'||key==='volume')match=issueNorm(actual)===issueNorm(value);else match=norm(actual)===norm(value);if(state!=='partial')state=match?'match':'mismatch';}
+ return {key,label:fieldNames[key],state,actual,value};});}
+function rankWorks(items,p){
+ const unique=[...new Map(items.filter(w=>w.DOI||safeURL(w.URL)).map(w=>[(w.DOI||w.URL).toLowerCase(),w])).values()];
+ const weights={number:5,journal:12,year:6,volume:6,issue:2,page:10,author:14,title:18};
+ return unique.map((w,i)=>{const ev=[...evidence(w,p.f),...looseEvidence(w,p.looseNumbers||[],p.f)],complete=ev.length>0&&ev.every(e=>e.state==='match');
+ const rank=ev.reduce((n,e)=>n+(e.state==='match'?weights[e.key]:e.state==='partial'?6:e.state==='mismatch'?-weights[e.key]:-weights[e.key]*0.35),0)+(complete?30:0);
+ return {w,ev,index:i,rank};}).sort((a,b)=>b.rank-a.rank||a.index-b.index);
+}
+function selectExact(ranked,p){
+ if(p.looseNumbers?.length||p.unparsed||p.conflicts?.length)return null;
+ const matches=ranked.filter(r=>{const f=p.f,w=r.w,has=k=>r.ev.some(e=>e.key===k&&e.state==='match');
+ if(r.ev.some(e=>e.state==='missing'||e.state==='mismatch'))return false;
+ const candidateTitle=clean(w.title?.[0]);const provided=f.title||p.raw||'';
+ const fullTitle=titleNorm(provided)===titleNorm(candidateTitle)&&words(candidateTitle).length>=5&&titleNorm(candidateTitle).length>=30;
+ const preciseCitation=['journal','year','volume','page'].every(has);
+ // A free-form query can contain additional constraints. Only collapse a parsed citation
+ // when its complete normalized text is accounted for by the extracted citation fields.
+ const accounted=(!p.unparsed&&Object.keys(p.rules||{}).length>0)||!p.raw||titleNorm(p.raw)===titleNorm(candidateTitle)||/^\s*@\w+\s*\{|^TY\s+-/m.test(p.raw)||norm(expandText(p.raw))===norm([f.journal,f.year,f.volume,f.issue,f.page].filter(Boolean).join(' '));
+ return accounted&&(fullTitle||preciseCitation);});
+ return matches.length===1?matches[0]:null;
+}
+
+
+function partialInputError(p){
+ if(p.conflicts?.length)return p.conflicts.join(' ');
+ if(extractDOIs(p.raw).length||safeURL(p.raw)||p.suffix)return '';
+ const count=Object.values(p.f).filter(Boolean).length+(p.looseNumbers||[]).length;
+ if(p.f.title&&words(p.f.title).length>=2)return '';
+ return count<2?'Provide at least two citation details for a partial search (e.g., MacMillan 2008 or Science 322). A full title, DOI, or DOI suffix can be searched alone.':'';
+}
+function looseEvidence(w,values,known={}){
+ const fields=[['volume',w.volume],['issue',w.issue],['page',w.page||w['article-number']],['year',yearsOf(w).join('/')]].filter(([k])=>!known[k]);
+ let best={n:-1,assignment:[]};
+ function visit(i,used,assignment,n){if(i===values.length){if(n>best.n)best={n,assignment:[...assignment]};return;}visit(i+1,used,[...assignment,-1],n);fields.forEach(([k,v],j)=>{if(!used.has(j)&&v&&(k==='page'?pageMatch(values[i],v):k==='year'?yearsOf(w).includes(values[i]):issueNorm(values[i])===issueNorm(v))){visit(i+1,new Set([...used,j]),[...assignment,j],n+1);}});}
+ visit(0,new Set(),[],0);
+ return values.map((v,i)=>{const j=best.assignment[i];return {key:'number',label:j>=0?'Number → '+fieldNames[fields[j][0]]:'Unclassified number',state:j>=0?'match':'mismatch',value:v,actual:j>=0?String(fields[j][1]):fields.filter(x=>x[1]).map(([k,n])=>fieldNames[k]+' '+n).join(' / ')};});
+}
+
+
+
+
+function searchURL(p){const u=new URL('https://api.crossref.org/works');if(p.q)u.searchParams.set('query.bibliographic',p.q);u.searchParams.set('rows','100');return u.href;}
+function queryPlan(p){
+ const f=p.f,focused=new URL('https://api.crossref.org/works'),filters=['type:journal-article'];
+ const issn=journalISSN[journalKey(f.journal)];
+ if(issn)filters.push('issn:'+issn);else if(f.journal)focused.searchParams.set('query.container-title',f.journal);
+ if(/^\d{4}$/.test(f.year))filters.push('from-pub-date:'+f.year+'-01-01','until-pub-date:'+f.year+'-12-31');
+ focused.searchParams.set('filter',filters.join(','));focused.searchParams.set('rows','100');
+ if(f.author)focused.searchParams.set('query.author',f.author.replace(/;/g,' '));
+ // Author/year query collects publications before numeric comparison.
+ // Crossref blocks query.title (HTTP 400); titles go through query.bibliographic.
+ if(f.title)focused.searchParams.set('query.bibliographic',f.title);
+ const numbers=[f.volume,f.issue,f.page,...(p.looseNumbers||[])].filter(Boolean).join(' ');
+ if(!f.title&&!(f.author&&f.year)&&numbers)focused.searchParams.set('query.bibliographic',numbers);
+ if(!f.title&&!f.author&&!numbers&&!f.journal&&p.q)focused.searchParams.set('query.bibliographic',p.q);
+ const broad=searchURL(p);
+ return [{kind:'focused',label:issn?'Narrowing candidates by journal and publication year…':f.title?'Searching by paper title…':'Searching by author and publication details…',url:focused.href},{kind:'broad',label:'Checking additional candidates using all provided details…',url:broad}].filter((v,i,a)=>a.findIndex(x=>x.url===v.url)===i);
+}
+async function retrieveCandidates(p,signal,onStage=()=>{}){
+ const batches=[],errors=[];
+ for(const step of queryPlan(p)){
+  if(signal.aborted)throw Error('Search canceled.');onStage(step.label);
+  try{const data=await api(step.url,signal);batches.push({kind:step.kind,items:data.items||[]});}
+  catch(e){if(signal.aborted)throw e;errors.push(e.message);}
+  // A full title or complete citation can finish after one confirmed, unambiguous response.
+  if(!errors.length){const early=evaluateCandidates(batches,p);if(early.single)return {...early,errors};}
+ }
+ if(!batches.length)throw Error(errors[0]||'Could not retrieve matching papers.');
+ return {...evaluateCandidates(batches,p),errors};
+}
+function showParsed(p){
+ const el=$('parsed'),chips=[];
+ for(const [k,v]of Object.entries(p.f))if(v)chips.push(`<span title="${esc(p.rules?.[k]||'Citation details')}"><b>${esc(fieldNames[k])}</b> ${esc(v)}${/inferred/i.test(p.rules?.[k]||'')?' <small>(inferred)</small>':''}</span>`);
+ if(extractDOIs(p.raw).length)chips.push('<span><b>DOI</b> '+esc(extractDOIs(p.raw).join(' · '))+'</span>');
+ if(p.looseNumbers?.length)chips.push('<span><b>Unclassified numbers</b> '+esc(p.looseNumbers.join(', '))+'</span>');
+ if(p.suffix)chips.push('<span><b>DOI '+(p.suffix.kind==='fragment'?'fragment':'suffix')+'</b> '+esc(p.suffix.suffix)+'</span>');
+ el.innerHTML='<strong>Recognized search details</strong><div class="parsedchips">'+chips.join('')+'</div>'+[...(p.notes||[]),...(p.conflicts||[])].map(t=>'<div class="help">'+esc(t)+'</div>').join('');el.hidden=!chips.length&&!p.conflicts?.length;
+}
+async function searchSuffix(info,signal){
+ const suffix=info.suffix.toLowerCase(),errors=[];
+ for(const doi of info.candidates){try{const w=await api('https://api.crossref.org/works/'+encodeURIComponent(doi),signal);if(String(w.DOI||'').toLowerCase().split('/').slice(1).join('/')===suffix)return {items:[w],exact:true,errors};}catch(e){if(signal.aborted)throw e;errors.push(e.message);}}
+ const u=new URL('https://api.crossref.org/works');u.searchParams.set('query',info.suffix);u.searchParams.set('rows','100');
+ try{const data=await api(u.href,signal),items=data.items||[];const exact=items.filter(w=>String(w.DOI||'').toLowerCase().split('/').slice(1).join('/')===suffix);
+ if(exact.length)return {items:exact,exact:exact.length===1,errors};
+ return {items:items.filter(w=>String(w.DOI||'').toLowerCase().split('/').slice(1).join('/').includes(suffix)),exact:false,errors};
+ }catch(e){if(signal.aborted)throw e;errors.push(e.message);return {items:[],exact:false,errors};}
+}
+
+function evaluateCandidates(batches,p){
+ // Keep broad-query relevance as the stable tie-breaker; exact field matches dominate.
+ const items=['broad','focused'].flatMap(kind=>batches.filter(b=>b.kind===kind).flatMap(b=>b.items||[]));
+ const ranked=rankWorks(items,p),single=selectExact(ranked,p);
+ return {ranked,single,shown:single?[single]:ranked.slice(0,25),candidateCount:ranked.length};
+}
+
+
+function citation(w){const j=journalOf(w),y=yearOf(w),v=w.volume||'',i=w.issue?`(${w.issue})`:'',p=w.page||w['article-number']||'';return [j,y,[v+i,p].filter(Boolean).join(', ')].filter(Boolean).join(' · ');}
+function authorText(w){return(w.author||[]).map(a=>clean(a.name||[a.given,a.family].filter(Boolean).join(' '))).join('; ');}
+let active=null,serial=0,works=[],cache=new Map(),toastTimer;
+function say(s,kind=''){ $('status').className='status '+kind;$('status').textContent=s;}
+function flash(s){$('toast').textContent=s;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,3000);}
+async function copyText(t){try{if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(t);else{const el=document.createElement('textarea');el.value=t;el.style.position='fixed';el.style.left='-9999px';document.body.append(el);el.select();const ok=document.execCommand('copy');el.remove();if(!ok)throw Error('copy');}flash('Copied to clipboard.');}catch{flash('Automatic copying is unavailable. Select and copy the displayed text instead.');}}
+let lastRequestAt=0;
+function pause(ms,signal){return new Promise((resolve,reject)=>{if(signal.aborted)return reject(Error('Search canceled.'));const abort=()=>{clearTimeout(timer);reject(Error('Search canceled.'));};const timer=setTimeout(()=>{signal.removeEventListener('abort',abort);resolve();},ms);signal.addEventListener('abort',abort,{once:true});});}
+async function api(url,signal){
+ if(signal.aborted)throw Error('Search canceled.');
+ if(cache.has(url))return cache.get(url);
+ for(let attempt=0;attempt<3;attempt++){
+  await pause(Math.max(0,1100-(Date.now()-lastRequestAt)),signal);lastRequestAt=Date.now();
+  const local=new AbortController(),abort=()=>local.abort();signal.addEventListener('abort',abort,{once:true});
+  if(signal.aborted)local.abort();const timer=setTimeout(()=>local.abort(),22000);let retryDelay=0;
+  try{
+   const res=await fetch(url,{signal:local.signal,headers:{Accept:'application/json'}});
+   if(!res.ok){const e=Error(res.status===429?'Too many requests. Please try again shortly.':res.status===404?'No matching metadata was found in Crossref.':`Search service error (${res.status}). Please try again.`);e.status=res.status;e.retryAfter=Number(res.headers.get('Retry-After'))||0;throw e;}
+   const j=await res.json();if(j.status!=='ok'||!j.message)throw Error('The search service returned an unexpected response.');
+   if(cache.size>=100)cache.delete(cache.keys().next().value);cache.set(url,j.message);return j.message;
+  }catch(e){
+   if(signal.aborted)throw Error('Search canceled.');
+   const transient=e.status===429||e.status>=500||e.name==='AbortError'||e instanceof TypeError;
+   if(transient&&attempt<2)retryDelay=Math.min(15000,Math.max(2000*2**attempt,(e.retryAfter||0)*1000));
+   else{if(e.name==='AbortError')throw Error('The search timed out. Please try again.');if(e instanceof TypeError)throw Error('Could not connect to the search service. Check your internet connection.');throw e;}
+  }finally{clearTimeout(timer);signal.removeEventListener('abort',abort);}
+  await pause(retryDelay,signal);
+ }
+}
+function fallbacks(q){const box=$('fallback');box.innerHTML='<span class="quiet">Search elsewhere</span>'+[['Google Scholar','https://scholar.google.com/scholar?q='],['Crossref Search','https://search.crossref.org/?q='],['Google','https://www.google.com/search?q=']].map(([n,u])=>`<a href="${esc(u+encodeURIComponent(q))}" target="_blank" rel="noopener noreferrer">${n} ↗</a>`).join('');box.hidden=false;}
+function evidenceHTML(ev){return ev.length?'<div class="evidence">'+ev.map(e=>`<span class="${e.state==='match'?'':e.state}" title="${esc('Input: '+e.value+' / Indexed metadata: '+(e.actual||'Not available'))}">${esc(e.label)} ${e.state==='match'?'Match':e.state==='missing'?'Not indexed':e.state==='partial'?'Partial match':'Mismatch'}</span>`).join('')+'</div>':'';}
+function renderCards(ranked,exact=false){works=ranked.map(r=>r.w);$('results').innerHTML=ranked.map(({w,ev},idx)=>{const title=clean(w.title?.[0]||'Untitled record'),authors=authorText(w);const url=w.DOI?doiURL(w.DOI):safeURL(w.resource?.primary?.URL||w.URL||'');return `<article class="result ${idx===0?'first':''}"><div class="resulttop"><span class="ordinal">${String(idx+1).padStart(2,'0')}</span><span class="badge ${exact?'':'neutral'}">${exact===true?'DOI metadata found':exact==='metadata'?'Citation details match · One result':'Possible match · Check details'}</span><span class="quiet">${esc(w.publisher||'')}</span></div><h3>${url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(title)}</a>`:esc(title)}</h3><p class="authors">${esc(authors.length>260?authors.slice(0,260)+'…':authors||'Authors not indexed')}</p><p class="citation">${esc(citation(w))}</p><div class="doi">${esc(w.DOI||'DOI not available')}</div>${evidenceHTML(ev||[])}<div class="resultactions">${url?`<a class="openlink" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Publisher page ↗</a>`:''}<button type="button" data-copy="citation" data-index="${idx}">Copy citation</button>${w.DOI?`<button type="button" data-copy="doi" data-index="${idx}">Copy DOI</button>`:''}</div></article>`;}).join('');}
+function directCard(doi){return `<article class="result first"><span class="badge warn">DOI detected · Not yet verified</span><h3 style="margin-top:12px">${esc(doi)}</h3><p class="help">You can open this DOI link even if metadata is unavailable. The link may not work if the DOI is incorrect or unregistered.</p><div class="resultactions"><a class="openlink" href="${esc(doiURL(doi))}" target="_blank" rel="noopener noreferrer">Open DOI ↗</a></div></article>`;}
+async function search(){
+ const raw=$('query').value.trim();
+ if(!raw){say('Enter a title, DOI, or at least two citation details.','warn');$('query').focus();return;}
+ const p=parseFreeInput(raw);showParsed(p);
+ const inputError=partialInputError(p);if(inputError){say(inputError,'warn');return;}
+ active?.abort();const controller=new AbortController();active=controller;const id=++serial;
+ $('search').disabled=true;$('cancel').hidden=false;$('results').innerHTML='';works=[];$('empty').hidden=true;
+ const dois=extractDOIs(raw),base=[p.q,...Object.values(p.f)].filter(Boolean).join(' ');
+ fallbacks(p.q||base||raw);say('Analyzing your search details…','loading');
+ try{
+ if(dois.length){$('results').innerHTML=dois.slice(0,8).map(directCard).join('');if(dois.length>1){say(`${dois.length} DOIs detected. Up to 8 are displayed. Search one DOI at a time to verify the paper title.`);return;}
+ say('Retrieving DOI metadata…','loading');const w=await api('https://api.crossref.org/works/'+encodeURIComponent(dois[0]),controller.signal);if(id!==serial)return;renderCards([{w,ev:[]}],true);say('DOI metadata found in Crossref. Check the article details on the publisher’s page.');return;}
+ if(p.suffix){
+ say('Looking up the DOI suffix…','loading');
+ const found=await searchSuffix(p.suffix,controller.signal);if(id!==serial)return;
+ if(found.items.length){renderCards(found.items.map(w=>({w,ev:[]})),found.exact===true);say(found.exact?'An exact DOI suffix match was verified.':'These candidates contain the entered DOI fragment. Check the full DOI and article title.');}
+ else{say('No record matches this DOI suffix. Try the full DOI or add an article title or author name.'+(found.errors.length?' Some lookup requests failed or returned no registered record.':''),'warn');
+ $('results').innerHTML=p.suffix.candidates.map(d=>directCard(d).replace('DOI detected · Not yet verified','DOI inferred from suffix · Not verified')).join('');}
+ return;
+ }
+ const direct=safeURL(raw);if(direct){$('results').innerHTML=`<article class="result"><span class="badge neutral">URL entered · Article page not verified</span><h3 style="margin-top:12px">This URL does not include a DOI.</h3><p class="doi">${esc(direct)}</p><div class="resultactions"><a class="openlink" href="${esc(direct)}" target="_blank" rel="noopener noreferrer">Open URL ↗</a></div><p class="help">Enter an article title or DOI to look up indexed citation details.</p></article>`;say('You can open the provided URL directly.');return;}
+ say('Searching Crossref for matching papers…','loading');
+ const found=await retrieveCandidates(p,controller.signal,label=>{if(id===serial)say(label,'loading');});if(id!==serial)return;
+ const {shown:ranked,single,candidateCount,errors}=found;
+ if(!ranked.length){say('No matching papers were found. Check your input or try a different combination of citation details.','warn');return;}
+ const incomplete=errors.length?' Some search requests failed; only the retrieved candidates are shown.':'';
+ if(single){renderCards([single],'metadata');say('One paper matches the supplied citation details. Matching fields: '+(single.ev.filter(e=>e.state==='match').map(e=>e.label).join(' · ')||'Full title')+'.'+incomplete);}
+ else{renderCards(ranked);const parsed=Object.entries(p.f).filter(([,v])=>v).map(([k,v])=>fieldNames[k]+': '+v).join(' · ');say(`${candidateCount} candidates compared; showing the top ${ranked.length}. ${parsed?'Compared fields — '+parsed+'. ':''}Check the article title, authors, and publication details.${incomplete}`);}
+
+ }catch(e){if(id===serial)say(e.message,'warn');}finally{if(id===serial){$('search').disabled=false;$('cancel').hidden=true;active=null;}}
+}
+$('form').addEventListener('submit',e=>{e.preventDefault();search();});
+$('query').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();$('form').requestSubmit();}});
+$('cancel').addEventListener('click',()=>{active?.abort();});
+$('clear').addEventListener('click',()=>{active?.abort();++serial;active=null;$('form').reset();$('parsed').hidden=true;$('parsed').textContent='';$('results').innerHTML='';works=[];$('fallback').hidden=true;$('empty').hidden=false;$('search').disabled=false;$('cancel').hidden=true;say('');$('query').focus();});
+$('results').addEventListener('click',e=>{const b=e.target.closest('[data-copy]');if(!b)return;const w=works[Number(b.dataset.index)];if(!w)return;copyText(b.dataset.copy==='doi'?w.DOI:[authorText(w),clean(w.title?.[0]),citation(w),w.DOI?doiURL(w.DOI):''].filter(Boolean).join('. '));});
+</script>
+</body>
+</html>
